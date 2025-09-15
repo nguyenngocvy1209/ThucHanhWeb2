@@ -12,7 +12,7 @@ using _2301010045_NguyenNgocVy_Buoi1.Data;
 namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250915075152_InitialDatabaseMigration")]
+    [Migration("20250915094529_InitialDatabaseMigration")]
     partial class InitialDatabaseMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,52 +41,6 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("CoverUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateAdded")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateRead")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Genre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("PublisherID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rate")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PublisherID");
-
-                    b.ToTable("Books");
-                });
-
             modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book_Author", b =>
                 {
                     b.Property<int>("Id")
@@ -110,6 +64,52 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
                     b.ToTable("Books_Authors");
                 });
 
+            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Books", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("CoverUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateAdded")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateRead")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Genre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PublisherID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Rate")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublisherID");
+
+                    b.ToTable("Books");
+                });
+
             modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Publisher", b =>
                 {
                     b.Property<int>("Id")
@@ -127,17 +127,6 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
                     b.ToTable("Publishers");
                 });
 
-            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book", b =>
-                {
-                    b.HasOne("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Publisher", "Publisher")
-                        .WithMany("Books")
-                        .HasForeignKey("PublisherID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Publisher");
-                });
-
             modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book_Author", b =>
                 {
                     b.HasOne("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Author", "Author")
@@ -146,7 +135,7 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book", "Book")
+                    b.HasOne("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Books", "Book")
                         .WithMany("Book_Authors")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -157,12 +146,23 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Books", b =>
+                {
+                    b.HasOne("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Publisher", "Publisher")
+                        .WithMany("Books")
+                        .HasForeignKey("PublisherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Publisher");
+                });
+
             modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Author", b =>
                 {
                     b.Navigation("Book_Authors");
                 });
 
-            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Book", b =>
+            modelBuilder.Entity("_2301010045_NguyenNgocVy_Buoi1.Models.Domain.Books", b =>
                 {
                     b.Navigation("Book_Authors");
                 });
