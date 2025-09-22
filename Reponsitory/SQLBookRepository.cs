@@ -18,7 +18,7 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
         {
             return _context.Books
                 .Include(b => b.Publisher)
-                .Include(b => b.Book_Authors)
+                .Include(b => b.BookAuthors)  // ✅ tên mới đồng bộ
                     .ThenInclude(ba => ba.Author)
                 .Select(b => new BookDTO
                 {
@@ -32,16 +32,17 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                     CoverUrl = b.CoverUrl,
                     DateAdded = b.DateAdded,
                     PublisherName = b.Publisher.Name,
-                    AuthorNames = b.Book_Authors.Select(x => x.Author.FullName).ToList()
+                    AuthorNames = b.BookAuthors.Select(x => x.Author.FullName).ToList()
                 })
                 .ToList();
         }
+
 
         public BookDTO? GetBookById(int id)
         {
             var book = _context.Books
                 .Include(b => b.Publisher)
-                .Include(b => b.Book_Authors)
+                .Include(b => b.BookAuthors)
                     .ThenInclude(ba => ba.Author)
                 .FirstOrDefault(b => b.Id == id);
 
@@ -59,7 +60,7 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                 CoverUrl = book.CoverUrl,
                 DateAdded = book.DateAdded,
                 PublisherName = book.Publisher.Name,
-                AuthorNames = book.Book_Authors.Select(x => x.Author.FullName).ToList()
+                AuthorNames = book.BookAuthors.Select(x => x.Author.FullName).ToList()
             };
         }
 
@@ -91,7 +92,7 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                         BookId = book.Id,
                         AuthorId = authorId
                     };
-                    _context.Books_Authors.Add(bookAuthor);
+                    _context.BookAuthors.Add(bookAuthor);
                 }
                 _context.SaveChanges();
             }
@@ -117,10 +118,10 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
             _context.SaveChanges();
 
             // cập nhật lại quan hệ Book - Author
-            var oldAuthors = _context.Books_Authors.Where(ba => ba.BookId == id).ToList();
+            var oldAuthors = _context.BookAuthors.Where(ba => ba.BookId == id).ToList();
             if (oldAuthors.Any())
             {
-                _context.Books_Authors.RemoveRange(oldAuthors);
+                _context.BookAuthors.RemoveRange(oldAuthors);
                 _context.SaveChanges();
             }
 
@@ -133,7 +134,7 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                         BookId = id,
                         AuthorId = authorId
                     };
-                    _context.Books_Authors.Add(bookAuthor);
+                    _context.BookAuthors.Add(bookAuthor);
                 }
                 _context.SaveChanges();
             }
@@ -146,10 +147,10 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
             var book = _context.Books.FirstOrDefault(b => b.Id == id);
             if (book == null) return null;
 
-            var authors = _context.Books_Authors.Where(ba => ba.BookId == id).ToList();
+            var authors = _context.BookAuthors.Where(ba => ba.BookId == id).ToList();
             if (authors.Any())
             {
-                _context.Books_Authors.RemoveRange(authors);
+                _context.BookAuthors.RemoveRange(authors);
                 _context.SaveChanges();
             }
 

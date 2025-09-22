@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace _2301010045_NguyenNgocVy_Buoi1.Models.Domain
+﻿namespace _2301010045_NguyenNgocVy_Buoi1.Models.Domain
 {
     public class Books
     {
-        [Key]
         public int Id { get; set; }
         public string Title { get; set; }
+
         public string Description { get; set; }
         public bool IsRead { get; set; }
         public DateTime? DateRead { get; set; }
@@ -15,11 +13,10 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Models.Domain
         public string CoverUrl { get; set; }
         public DateTime DateAdded { get; set; }
 
-        // Navigation Properties - One publisher has many books
         public int PublisherID { get; set; }
         public Publisher Publisher { get; set; }
 
-        // Navigation Properties - One book has many book_author
-        public List<Book_Author> Book_Authors { get; set; }
+        // ✅ Navigation property
+        public ICollection<Book_Author> BookAuthors { get; set; }
     }
 }

@@ -1,7 +1,11 @@
-﻿namespace _2301010045_NguyenNgocVy_Buoi1.Models.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace _2301010045_NguyenNgocVy_Buoi1.Models.DTO
 {
     public class AddAuthorRequestDTO
     {
-        public string FullName { set; get; }
+        [Required(ErrorMessage = "Author name is required")]
+        [MinLength(3, ErrorMessage = "Author name must be at least 3 characters long")]
+        public string FullName { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using _2301010045_NguyenNgocVy_Buoi1.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace _2301010045_NguyenNgocVy_Buoi1.Data
 {
     public class AppDbContext : DbContext
@@ -16,21 +15,24 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Định nghĩa mối quan hệ giữa các table bằng Fluent API
+            modelBuilder.Entity<Book_Author>()
+                .HasKey(ba => new { ba.BookId, ba.AuthorId }); // 🔑 Khóa chính kép
 
             modelBuilder.Entity<Book_Author>()
                 .HasOne(b => b.Book)
-                .WithMany(ba => ba.Book_Authors)
+                .WithMany(ba => ba.BookAuthors)
                 .HasForeignKey(bi => bi.BookId);
 
             modelBuilder.Entity<Book_Author>()
                 .HasOne(b => b.Author)
-                .WithMany(ba => ba.Book_Authors)
+                .WithMany(ba => ba.BookAuthors)
                 .HasForeignKey(bi => bi.AuthorId);
         }
 
         public DbSet<Books> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
-        public DbSet<Book_Author> Books_Authors { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
+        public DbSet<Book_Author> BookAuthors { get; set; }  // ✅ tên chuẩn
+
     }
 }
