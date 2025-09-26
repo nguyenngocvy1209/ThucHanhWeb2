@@ -14,7 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Repositories
+
 builder.Services.AddScoped<IBookRepository, SQLBookRepository>();
+
 builder.Services.AddScoped<IPublisherRepository, SQLPublisherRepository>();  // <-- TH?M D?NG N?Y
 builder.Services.AddScoped<IAuthorRepository, SQLAuthorRepository>();
 

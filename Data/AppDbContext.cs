@@ -8,31 +8,38 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Data
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions)
             : base(dbContextOptions)
         {
-            // constructor
         }
 
-        // Define C# model
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Định nghĩa mối quan hệ giữa các table bằng Fluent API
+            base.OnModelCreating(modelBuilder);
+
+            // 🔹 Map tới bảng Books_Authors trong DB
             modelBuilder.Entity<Book_Author>()
-                .HasKey(ba => new { ba.BookId, ba.AuthorId }); // 🔑 Khóa chính kép
+                .ToTable("Books_Authors")  // 👈 đổi lại đúng tên bảng DB
+                .HasKey(ba => new { ba.BookId, ba.AuthorId });
 
             modelBuilder.Entity<Book_Author>()
-                .HasOne(b => b.Book)
-                .WithMany(ba => ba.BookAuthors)
-                .HasForeignKey(bi => bi.BookId);
+                .HasOne(ba => ba.Book)
+                .WithMany(b => b.BookAuthors)
+                .HasForeignKey(ba => ba.BookId);
 
             modelBuilder.Entity<Book_Author>()
-                .HasOne(b => b.Author)
-                .WithMany(ba => ba.BookAuthors)
-                .HasForeignKey(bi => bi.AuthorId);
+                .HasOne(ba => ba.Author)
+                .WithMany(a => a.BookAuthors)
+                .HasForeignKey(ba => ba.AuthorId);
+
+            // Quan hệ Publisher - Books
+            modelBuilder.Entity<Publisher>()
+                .HasMany(p => p.Books)
+                .WithOne(b => b.Publisher)
+                .HasForeignKey(b => b.PublisherID)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Books> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
-        public DbSet<Book_Author> BookAuthors { get; set; }  // ✅ tên chuẩn
-
+        public DbSet<Book_Author> BookAuthors { get; set; }
     }
 }

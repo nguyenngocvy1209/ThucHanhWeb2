@@ -7,43 +7,75 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
 {
     public class SQLBookRepository : IBookRepository
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _dbContext;
 
-        public SQLBookRepository(AppDbContext context)
+        public SQLBookRepository(AppDbContext dbContext)
         {
-            _context = context;
+            _dbContext = dbContext;
         }
 
-        public List<BookDTO> GetAllBooks()
+        // ================================
+        // Get All Books
+        // ================================
+        public List<BookDTO> GetAllBooks(
+            string? filterOn = null,
+            string? filterQuery = null,
+            string? sortBy = null,
+            bool isAscending = true,
+            int pageNumber = 1,
+            int pageSize = 1000)
         {
-            return _context.Books
+            var allBooks = _dbContext.Books
                 .Include(b => b.Publisher)
-                .Include(b => b.BookAuthors)  // ✅ tên mới đồng bộ
-                    .ThenInclude(ba => ba.Author)
+                .Include(b => b.BookAuthors).ThenInclude(ba => ba.Author)
                 .Select(b => new BookDTO
                 {
                     Id = b.Id,
                     Title = b.Title,
                     Description = b.Description,
                     IsRead = b.IsRead,
-                    DateRead = b.DateRead,
-                    Rate = b.Rate,
+                    DateRead = b.IsRead ? b.DateRead : null,
+                    Rate = b.IsRead ? b.Rate : null,
                     Genre = b.Genre,
                     CoverUrl = b.CoverUrl,
-                    DateAdded = b.DateAdded,
                     PublisherName = b.Publisher.Name,
-                    AuthorNames = b.BookAuthors.Select(x => x.Author.FullName).ToList()
+                    AuthorNames = b.BookAuthors.Select(a => a.Author.FullName).ToList()
                 })
-                .ToList();
+                .AsQueryable();
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+            {
+                if (filterOn.Equals("title", StringComparison.OrdinalIgnoreCase))
+                {
+                    allBooks = allBooks.Where(x => x.Title.Contains(filterQuery));
+                }
+            }
+
+            // Sorting
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                if (sortBy.Equals("title", StringComparison.OrdinalIgnoreCase))
+                {
+                    allBooks = isAscending
+                        ? allBooks.OrderBy(x => x.Title)
+                        : allBooks.OrderByDescending(x => x.Title);
+                }
+            }
+
+            // Pagination
+            var skipResults = (pageNumber - 1) * pageSize;
+            return allBooks.Skip(skipResults).Take(pageSize).ToList();
         }
 
-
+        // ================================
+        // Get Book by Id
+        // ================================
         public BookDTO? GetBookById(int id)
         {
-            var book = _context.Books
+            var book = _dbContext.Books
                 .Include(b => b.Publisher)
-                .Include(b => b.BookAuthors)
-                    .ThenInclude(ba => ba.Author)
+                .Include(b => b.BookAuthors).ThenInclude(ba => ba.Author)
                 .FirstOrDefault(b => b.Id == id);
 
             if (book == null) return null;
@@ -58,15 +90,17 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                 Rate = book.Rate,
                 Genre = book.Genre,
                 CoverUrl = book.CoverUrl,
-                DateAdded = book.DateAdded,
                 PublisherName = book.Publisher.Name,
-                AuthorNames = book.BookAuthors.Select(x => x.Author.FullName).ToList()
+                AuthorNames = book.BookAuthors.Select(a => a.Author.FullName).ToList()
             };
         }
 
+        // ================================
+        // Add Book
+        // ================================
         public Books AddBook(AddBookRequestDTO addBookRequestDTO)
         {
-            var book = new Books
+            var bookDomainModel = new Books
             {
                 Title = addBookRequestDTO.Title,
                 Description = addBookRequestDTO.Description,
@@ -79,84 +113,88 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Reponsitory
                 PublisherID = addBookRequestDTO.PublisherID
             };
 
-            _context.Books.Add(book);
-            _context.SaveChanges();
+            _dbContext.Books.Add(bookDomainModel);
+            _dbContext.SaveChanges();
 
-            // thêm quan hệ Book - Author
             if (addBookRequestDTO.AuthorIds != null && addBookRequestDTO.AuthorIds.Any())
             {
-                foreach (var authorId in addBookRequestDTO.AuthorIds)
+                foreach (var id in addBookRequestDTO.AuthorIds)
                 {
-                    var bookAuthor = new Book_Author
+                    _dbContext.BookAuthors.Add(new Book_Author
                     {
-                        BookId = book.Id,
-                        AuthorId = authorId
-                    };
-                    _context.BookAuthors.Add(bookAuthor);
+                        BookId = bookDomainModel.Id,
+                        AuthorId = id
+                    });
                 }
-                _context.SaveChanges();
+                _dbContext.SaveChanges();
             }
 
-            return book;
+            return bookDomainModel;
         }
 
+        // ================================
+        // Update Book
+        // ================================
         public Books? UpdateBookById(int id, AddBookRequestDTO bookDTO)
         {
-            var existingBook = _context.Books.FirstOrDefault(b => b.Id == id);
-            if (existingBook == null) return null;
+            var bookDomain = _dbContext.Books.FirstOrDefault(n => n.Id == id);
+            if (bookDomain == null) return null;
 
-            existingBook.Title = bookDTO.Title;
-            existingBook.Description = bookDTO.Description;
-            existingBook.IsRead = bookDTO.IsRead;
-            existingBook.DateRead = bookDTO.IsRead ? bookDTO.DateRead : null;
-            existingBook.Rate = bookDTO.IsRead ? bookDTO.Rate : null;
-            existingBook.Genre = bookDTO.Genre;
-            existingBook.CoverUrl = bookDTO.CoverUrl;
-            existingBook.DateAdded = bookDTO.DateAdded;
-            existingBook.PublisherID = bookDTO.PublisherID;
+            // update fields
+            bookDomain.Title = bookDTO.Title;
+            bookDomain.Description = bookDTO.Description;
+            bookDomain.IsRead = bookDTO.IsRead;
+            bookDomain.DateRead = bookDTO.IsRead ? bookDTO.DateRead : null;
+            bookDomain.Rate = bookDTO.IsRead ? bookDTO.Rate : null;
+            bookDomain.Genre = bookDTO.Genre;
+            bookDomain.CoverUrl = bookDTO.CoverUrl;
+            bookDomain.DateAdded = bookDTO.DateAdded;
+            bookDomain.PublisherID = bookDTO.PublisherID;
+            _dbContext.SaveChanges();
 
-            _context.SaveChanges();
-
-            // cập nhật lại quan hệ Book - Author
-            var oldAuthors = _context.BookAuthors.Where(ba => ba.BookId == id).ToList();
+            // update authors
+            var oldAuthors = _dbContext.BookAuthors.Where(a => a.BookId == id).ToList();
             if (oldAuthors.Any())
             {
-                _context.BookAuthors.RemoveRange(oldAuthors);
-                _context.SaveChanges();
+                _dbContext.BookAuthors.RemoveRange(oldAuthors);
+                _dbContext.SaveChanges();
             }
 
             if (bookDTO.AuthorIds != null && bookDTO.AuthorIds.Any())
             {
                 foreach (var authorId in bookDTO.AuthorIds)
                 {
-                    var bookAuthor = new Book_Author
+                    _dbContext.BookAuthors.Add(new Book_Author
                     {
                         BookId = id,
                         AuthorId = authorId
-                    };
-                    _context.BookAuthors.Add(bookAuthor);
+                    });
                 }
-                _context.SaveChanges();
+                _dbContext.SaveChanges();
             }
 
-            return existingBook;
+            return bookDomain;
         }
 
+        // ================================
+        // Delete Book
+        // ================================
         public Books? DeleteBookById(int id)
         {
-            var book = _context.Books.FirstOrDefault(b => b.Id == id);
-            if (book == null) return null;
+            var bookDomain = _dbContext.Books.FirstOrDefault(n => n.Id == id);
+            if (bookDomain == null) return null;
 
-            var authors = _context.BookAuthors.Where(ba => ba.BookId == id).ToList();
+            var authors = _dbContext.BookAuthors.Where(a => a.BookId == id).ToList();
             if (authors.Any())
             {
-                _context.BookAuthors.RemoveRange(authors);
-                _context.SaveChanges();
+                _dbContext.BookAuthors.RemoveRange(authors);
+                _dbContext.SaveChanges();
             }
 
-            _context.Books.Remove(book);
-            _context.SaveChanges();
-            return book;
+            _dbContext.Books.Remove(bookDomain);
+            _dbContext.SaveChanges();
+
+            return bookDomain;
         }
     }
 }

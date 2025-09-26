@@ -1,4 +1,7 @@
-﻿namespace _2301010045_NguyenNgocVy_Buoi1.Models.Domain
+﻿using System;
+using System.Collections.Generic;
+
+namespace _2301010045_NguyenNgocVy_Buoi1.Models.Domain
 {
     public class Books
     {
@@ -13,10 +16,12 @@
         public string CoverUrl { get; set; }
         public DateTime DateAdded { get; set; }
 
+        // Quan hệ 1 - nhiều: Publisher có nhiều Books
         public int PublisherID { get; set; }
         public Publisher Publisher { get; set; }
 
-        // ✅ Navigation property
-        public ICollection<Book_Author> BookAuthors { get; set; }
+        // Quan hệ nhiều - nhiều: Book có nhiều Author
+        public ICollection<Book_Author> BookAuthors { get; set; } = new List<Book_Author>();
+        // 👆 Khởi tạo List mặc định để tránh null reference
     }
 }

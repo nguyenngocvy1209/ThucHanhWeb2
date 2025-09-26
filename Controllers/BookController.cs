@@ -1,10 +1,8 @@
 ﻿using _2301010045_NguyenNgocVy_Buoi1.CustomActionFilter;
-using _2301010045_NguyenNgocVy_Buoi1.Data;
 using _2301010045_NguyenNgocVy_Buoi1.Models.Domain;
 using _2301010045_NguyenNgocVy_Buoi1.Models.DTO;
 using _2301010045_NguyenNgocVy_Buoi1.Reponsitory;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace _2301010045_NguyenNgocVy_Buoi1.Controllers
 {
@@ -19,78 +17,99 @@ namespace _2301010045_NguyenNgocVy_Buoi1.Controllers
             _bookRepository = bookRepository;
         }
 
-        // GET ALL
+        // ================================
+        // GET ALL with Filter, Sort, Paging
+        // ================================
         [HttpGet("get-all-books")]
-        public IActionResult GetAll()
+        public IActionResult GetAll(
+            [FromQuery] string? filterOn,
+            [FromQuery] string? filterQuery,
+            [FromQuery] string? sortBy,
+            [FromQuery] bool isAscending = true,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)   // mặc định lấy 100 bản ghi
         {
-            var allBooks = _bookRepository.GetAllBooks();
+            var allBooks = _bookRepository.GetAllBooks(filterOn, filterQuery, sortBy, isAscending, pageNumber, pageSize);
             return Ok(allBooks);
         }
 
+        // ================================
         // GET BY ID
+        // ================================
         [HttpGet("get-book-by-id/{id}")]
         public IActionResult GetBookById([FromRoute] int id)
         {
             var bookWithIdDTO = _bookRepository.GetBookById(id);
-            if (bookWithIdDTO == null) return NotFound();
+            if (bookWithIdDTO == null)
+                return NotFound(new { Message = $"Book with Id {id} not found." });
+
             return Ok(bookWithIdDTO);
         }
 
+        // ================================
         // ADD
+        // ================================
         [HttpPost("add-book")]
         [ValidateModel]
-        //[Authorize(Roles ="Write")]
         public IActionResult AddBook([FromBody] AddBookRequestDTO addBookRequestDTO)
         {
-            if (ValidateAddBook(addBookRequestDTO))
-            {
-                var bookAdd = _bookRepository.AddBook(addBookRequestDTO);
-                return Ok(bookAdd);
-            }
-            return BadRequest(ModelState);
+            if (!ValidateAddBook(addBookRequestDTO))
+                return BadRequest(ModelState);
+
+            var bookAdd = _bookRepository.AddBook(addBookRequestDTO);
+            return Ok(new { Message = "Book added successfully!", Data = bookAdd });
         }
 
+        // ================================
         // UPDATE
+        // ================================
         [HttpPut("update-book-by-id/{id}")]
         public IActionResult UpdateBookById(int id, [FromBody] AddBookRequestDTO bookDTO)
         {
             var updateBook = _bookRepository.UpdateBookById(id, bookDTO);
-            if (updateBook == null) return NotFound();
-            return Ok(updateBook);
+            if (updateBook == null)
+                return NotFound(new { Message = $"Book with Id {id} not found." });
+
+            return Ok(new { Message = "Book updated successfully!", Data = updateBook });
         }
 
+        // ================================
         // DELETE
+        // ================================
         [HttpDelete("delete-book-by-id/{id}")]
         public IActionResult DeleteBookById(int id)
         {
             var deleteBook = _bookRepository.DeleteBookById(id);
-            if (deleteBook == null) return NotFound();
-            return Ok(deleteBook);
+            if (deleteBook == null)
+                return NotFound(new { Message = $"Book with Id {id} not found." });
+
+            return Ok(new { Message = "Book deleted successfully!", Data = deleteBook });
         }
+
+        // ================================
+        // Validation Method
+        // ================================
         private bool ValidateAddBook(AddBookRequestDTO addBookRequestDTO)
         {
             if (addBookRequestDTO == null)
             {
-                ModelState.AddModelError(nameof(addBookRequestDTO), $"Please add book  data");
+                ModelState.AddModelError(nameof(addBookRequestDTO), "Please provide book data");
                 return false;
             }
-            // kiem tra Description NotNull
+
             if (string.IsNullOrEmpty(addBookRequestDTO.Description))
             {
                 ModelState.AddModelError(nameof(addBookRequestDTO.Description),
-               $"{nameof(addBookRequestDTO.Description)} cannot be null");
+                    "Description cannot be null or empty");
             }
-            // kiem tra rating (0,5) 
+
             if (addBookRequestDTO.Rate < 0 || addBookRequestDTO.Rate > 5)
             {
                 ModelState.AddModelError(nameof(addBookRequestDTO.Rate),
-               $"{nameof(addBookRequestDTO.Rate)} cannot be less than 0 and more than 5");
+                    "Rate must be between 0 and 5");
             }
-            if (ModelState.ErrorCount > 0)
-            {
-                return false;
-            }
-            return true;
+
+            return ModelState.ErrorCount == 0;
         }
     }
 }
